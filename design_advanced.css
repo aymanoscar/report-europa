@@ -1,0 +1,499 @@
+/* ==========================================================================
+   DESIGN ADVANCED — Report Europa 2026
+   Upgrade visivo: texture, cornici, profondità, immagini, hero.
+   --------------------------------------------------------------------------
+   COME USARLO
+   1. Caricare DOPO il CSS base (inline nel <head> di Report_Europa_2026.html),
+      subito prima di </head>:
+        <link rel="stylesheet" href="design_advanced.css">
+   2. Le classi qui definite SI AGGIUNGONO a quelle esistenti (.card .chart
+      .grid .points .table .hero .kicker .badge ...): nessuna viene rimossa
+      o ribaltata, le regole base restano valide.
+   3. Immagini: creare la cartella assets/ accanto al file HTML e inserire
+      hero.jpg, industria.jpg, energia.jpg, bruxelles.jpg (1920px+ consigliati).
+      Se un'immagine manca, il gradiente scuro di fallback resta attivo.
+   4. Applicazione suggerita:
+        <div class="hero bg-hero">            → hero con foto
+        <section class="tex-grid">            → sezione con texture
+        <div class="card card--gradient">     → card con bordo gradiente
+        <div class="card frame-corners">      → card con angoli decorativi
+        <div class="quote-box">...</div>      → box citazione
+        <span class="pill pill--green">…</span> → badge pill con glow
+        <nav class="nav-glass">               → nav in vetro
+   ========================================================================== */
+/* ==========================================================================
+   0. VARIABILI DERIVATE — si aggiungono al :root esistente senza toccarlo
+   ========================================================================== */
+:root{
+  /* Ombre a strati (stile Linear): soft → profondo */
+  --shadow-1:0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.22);
+  --shadow-2:0 2px 4px rgba(0,0,0,.45), 0 14px 34px rgba(0,0,0,.32),
+             0 28px 70px rgba(0,0,0,.22);
+  --shadow-3:0 4px 10px rgba(0,0,0,.5), 0 28px 60px rgba(0,0,0,.42),
+             0 60px 140px rgba(0,0,0,.28);
+
+  /* Glow (bagliori accent) */
+  --glow-soft:0 0 22px rgba(113,112,255,.28);
+  --glow-strong:0 0 36px rgba(113,112,255,.55);
+  --glow-green:0 0 24px rgba(16,185,129,.35);
+  --glow-red:0 0 24px rgba(239,68,68,.35);
+
+  /* Raggi e spessori */
+  --radius:12px;
+  --radius-lg:18px;
+  --hairline:1px solid var(--border);
+
+  /* Texture SVG riusate (data-URI definiti sotto) */
+  --tex-dots:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='2.5' cy='2.5' r='1.4' fill='%237170ff' fill-opacity='0.22'/%3E%3C/svg%3E");
+  --tex-grid:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M44 0H0V44' fill='none' stroke='%23ffffff' stroke-opacity='0.055'/%3E%3C/svg%3E");
+  --tex-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+/* ==========================================================================
+   1. TEXTURE — pattern SVG inline (data-URI, zero richieste HTTP)
+   --------------------------------------------------------------------------
+   Applicare a sezioni o pannelli interni: <section class="tex-dots">.
+   NON applicarle insieme a .bg-* sullo stesso elemento (entrambe usano
+   background-image): in quel caso mettere la texture su un wrapper interno.
+   ========================================================================== */
+
+/* 1a. Punti accent — ritmo leggero, adatto a sezioni numeriche */
+.tex-dots{
+  background-image:var(--tex-dots);
+  background-repeat:repeat;
+  background-size:24px 24px;
+}
+
+/* 1b. Griglia sottile — struttura "blueprint", ottima su sezioni di analisi */
+.tex-grid{
+  background-image:var(--tex-grid);
+  background-repeat:repeat;
+  background-size:44px 44px;
+}
+
+/* 1c. Variante griglia con maglia accent (più visibile, per intestazioni) */
+.tex-grid--accent{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M44 0H0V44' fill='none' stroke='%237170ff' stroke-opacity='0.14'/%3E%3C/svg%3E");
+  background-repeat:repeat;
+  background-size:44px 44px;
+}
+
+/* 1d. Noise granulare — "pellicola" su hero e footer, smorza le aree piatte */
+.tex-noise{
+  background-image:var(--tex-noise);
+  background-repeat:repeat;
+  background-size:140px 140px;
+}
+
+/* 1e. Texture con opacità ridotta: per overlay su immagini .bg-* (wrapper) */
+.tex-dots--fade{ opacity:.65; }
+.tex-grid--fade{ opacity:.5; }
+/* ==========================================================================
+   2. CORNICI E RIQUADRI — varianti avanzate della card base
+   ========================================================================== */
+
+/* 2a. Card con BORDO GRADIENTE — trucco background-clip: doppio layer,
+       uno per il riempimento (padding-box) e uno per il bordo (border-box) */
+.card--gradient{
+  border:1px solid transparent;
+  background:
+    linear-gradient(var(--panel),var(--panel)) padding-box,
+    linear-gradient(135deg, rgba(113,112,255,.55), rgba(113,112,255,.06) 38%,
+                    rgba(113,112,255,.06) 62%, rgba(130,143,255,.5)) border-box;
+  box-shadow:var(--shadow-1);
+}
+
+/* 2b. Variante bordo gradiente "pulsante" (verde → accent), per highlight */
+.card--gradient-green{
+  border:1px solid transparent;
+  background:
+    linear-gradient(var(--panel),var(--panel)) padding-box,
+    linear-gradient(135deg, rgba(16,185,129,.5), rgba(16,185,129,.05) 45%,
+                    rgba(113,112,255,.35)) border-box;
+  box-shadow:var(--shadow-1);
+}
+
+/* 2c. BOX CITAZIONE — barra accent a sinistra + sfondo sfumato */
+.quote-box{
+  position:relative;
+  padding:1.15rem 1.4rem 1.15rem 1.5rem;
+  border-left:3px solid var(--accent2);
+  border-radius:0 var(--radius) var(--radius) 0;
+  background:linear-gradient(90deg, rgba(113,112,255,.09), rgba(113,112,255,.015) 65%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03), var(--shadow-1);
+}
+
+/* Virgolette decorative in alto a destra */
+.quote-box::after{
+  content:"\201D";
+  position:absolute;
+  top:-.55em;
+  right:.55rem;
+  font-size:3.2rem;
+  line-height:1;
+  font-family:Georgia, serif;
+  color:var(--accent2);
+  opacity:.22;
+  pointer-events:none;
+}
+
+/* 2d. CORNER DECORATIVI — staffe accent sugli angoli (pseudo-elementi) */
+.frame-corners{
+  position:relative;
+}
+.frame-corners::before,
+.frame-corners::after{
+  content:"";
+  position:absolute;
+  width:16px;
+  height:16px;
+  pointer-events:none;
+}
+/* Angolo alto-sinistra: due tratti a "L" */
+.frame-corners::before{
+  top:-1px;
+  left:-1px;
+  border-top:2px solid var(--accent2);
+  border-left:2px solid var(--accent2);
+  border-top-left-radius:4px;
+  filter:drop-shadow(0 0 6px rgba(113,112,255,.5));
+}
+/* Angolo basso-destra: "L" specchiata */
+.frame-corners::after{
+  bottom:-1px;
+  right:-1px;
+  border-bottom:2px solid var(--accent2);
+  border-right:2px solid var(--accent2);
+  border-bottom-right-radius:4px;
+  filter:drop-shadow(0 0 6px rgba(113,112,255,.5));
+}
+
+/* 2e. BADGE PILL con GLOW — complementare alla classe .badge esistente */
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.3rem .85rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--text2);
+  background:rgba(113,112,255,.1);
+  border:1px solid rgba(113,112,255,.32);
+  box-shadow:var(--glow-soft), inset 0 0 14px rgba(113,112,255,.07);
+  white-space:nowrap;
+}
+/* Pallino stato davanti al testo (opzionale, via ::before) */
+.pill::before{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--accent2);
+  box-shadow:0 0 8px var(--accent2);
+}
+.pill--green{
+  color:#a7f3d0;
+  background:rgba(16,185,129,.1);
+  border-color:rgba(16,185,129,.35);
+  box-shadow:var(--glow-green), inset 0 0 14px rgba(16,185,129,.06);
+}
+.pill--green::before{ background:var(--green); box-shadow:0 0 8px var(--green); }
+.pill--red{
+  color:#fecaca;
+  background:rgba(239,68,68,.1);
+  border-color:rgba(239,68,68,.35);
+  box-shadow:var(--glow-red), inset 0 0 14px rgba(239,68,68,.06);
+}
+.pill--red::before{ background:var(--red); box-shadow:0 0 8px var(--red); }
+.pill--amber{
+  color:#fde68a;
+  background:rgba(245,158,11,.1);
+  border-color:rgba(245,158,11,.35);
+}
+.pill--amber::before{ background:var(--amber); box-shadow:0 0 8px var(--amber); }
+
+/* 2f. Separatore con gradiente + glow (sostituisce <hr> piatti) */
+.hr-glow{
+  height:1px;
+  border:0;
+  margin:2rem 0;
+  background:linear-gradient(90deg, transparent, rgba(113,112,255,.4), transparent);
+}
+/* ==========================================================================
+   3. EFFETTI DIMENSIONALI — profondità, vetro, sollevamento, bagliori
+   ========================================================================== */
+
+/* 3a. LAYERED SHADOWS — .card potenziato: transizione + lift all'hover */
+.card{
+  transition:transform .28s cubic-bezier(.2,.7,.3,1),
+             box-shadow .28s ease,
+             border-color .28s ease;
+}
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-2);
+  border-color:rgba(113,112,255,.22);
+}
+/* Ombra profonda statica per pannelli "pesanti" (senza lift) */
+.shadow-deep{ box-shadow:var(--shadow-2); }
+.shadow-deeper{ box-shadow:var(--shadow-3); }
+/* 3b. GLASSMORPHISM — pannelli in vetro satinato (nav, card hero, sticky) */
+.glass{
+  background:rgba(15,16,17,.55);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  backdrop-filter:blur(18px) saturate(150%);
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:var(--shadow-2);
+}
+.glass--soft{
+  background:rgba(15,16,17,.38);
+  -webkit-backdrop-filter:blur(12px) saturate(140%);
+  backdrop-filter:blur(12px) saturate(140%);
+  border:1px solid rgba(255,255,255,.05);
+}
+/* Nav in vetro: appiccicosa, sfondo semitrasparente, blur sotto */
+.nav-glass{
+  position:sticky;
+  top:0;
+  z-index:120;
+  background:rgba(8,9,10,.62);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  backdrop-filter:blur(18px) saturate(160%);
+  border-bottom:1px solid var(--border);
+}
+
+/* Card "hero" in vetro: per statistiche/quote sovrapposte alle immagini */
+.hero-card{
+  padding:1.6rem 1.8rem;
+  border-radius:var(--radius-lg);
+  background:rgba(15,16,17,.5);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  backdrop-filter:blur(20px) saturate(150%);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:var(--shadow-2);
+}
+
+/* 3c. HOVER LIFT generico — per qualunque elemento (es. .grid > div) */
+.lift{
+  transition:transform .28s cubic-bezier(.2,.7,.3,1), box-shadow .28s ease;
+}
+.lift:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-2);
+}
+
+/* 3d. GLOW sugli elementi accent — numeri, titoli, punti chiave */
+.glow-accent{
+  color:var(--accent3);
+  text-shadow:0 0 20px rgba(113,112,255,.55);
+}
+.glow-text{
+  text-shadow:0 0 26px rgba(113,112,255,.35);
+}
+/* I numeri statistici (.num esistenti) prendono un bagliore discreto */
+.num{
+  text-shadow:0 0 30px rgba(113,112,255,.18);
+}
+/* Punti chiave (.points esistenti): bordo + glow al passaggio del mouse */
+.points li:hover{
+  border-color:rgba(113,112,255,.3);
+  box-shadow:var(--glow-soft);
+}
+
+/* 3e. PROFONDITÀ AMBIENTALE — bagliori radiali fissi dietro il contenuto */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(1200px 800px at 85% -10%, rgba(113,112,255,.075), transparent 60%),
+    radial-gradient(1000px 700px at -10% 30%, rgba(94,106,210,.05), transparent 55%),
+    radial-gradient(900px 900px at 50% 115%, rgba(16,185,129,.04), transparent 60%);
+}
+/* Profondità su singole sezioni (da aggiungere a .tex-* su wrapper) */
+.bg-depth{
+  background:
+    radial-gradient(900px 500px at 20% 0%, rgba(113,112,255,.06), transparent 60%),
+    radial-gradient(700px 400px at 90% 100%, rgba(94,106,210,.04), transparent 55%);
+}
+/* ==========================================================================
+   4. IMMAGINI DI SFONDO — assets locali + overlay scuro
+   Uso: <div class="hero bg-hero"> o <section class="bg-industria">.
+   Overlay rgba(8,9,10,.92)→rgba(8,9,10,.75) per leggibilità; se il jpg
+   manca, resta il gradiente di fallback.
+   ========================================================================== */
+
+/* Overlay condiviso (riusato da tutte le classi .bg-*) */
+.bg-hero,
+.bg-industria,
+.bg-energia,
+.bg-bruxelles{
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.bg-hero{
+  background-image:
+    linear-gradient(180deg, rgba(8,9,10,.92) 0%, rgba(8,9,10,.82) 45%, rgba(8,9,10,.75) 100%),
+    url("assets/hero.jpg");
+}
+.bg-industria{
+  background-image:
+    linear-gradient(180deg, rgba(8,9,10,.92) 0%, rgba(8,9,10,.82) 45%, rgba(8,9,10,.75) 100%),
+    url("assets/industria.jpg");
+}
+.bg-energia{
+  background-image:
+    linear-gradient(180deg, rgba(8,9,10,.92) 0%, rgba(8,9,10,.82) 45%, rgba(8,9,10,.75) 100%),
+    url("assets/energia.jpg");
+}
+.bg-bruxelles{
+  background-image:
+    linear-gradient(180deg, rgba(8,9,10,.92) 0%, rgba(8,9,10,.82) 45%, rgba(8,9,10,.75) 100%),
+    url("assets/bruxelles.jpg");
+}
+/* 4a. Effetto parallasse opzionale (disattivato su mobile/touch sotto) */
+.bg-fixed{ background-attachment:fixed; }
+
+/* 4b. Overlay aggiuntivo più scuro per zone con molto testo */
+.overlay-strong{
+  background-image:
+    linear-gradient(180deg, rgba(8,9,10,.95), rgba(8,9,10,.85)),
+    linear-gradient(180deg, rgba(8,9,10,.92), rgba(8,9,10,.75));
+}
+/* ==========================================================================
+   5. HEADER / HERO RIDISEGNATO
+   Struttura: .hero > .wrap > .kicker + h1 + p + .meta.
+   Foto con: <div class="hero bg-hero">
+   ========================================================================== */
+
+/* Contenitore hero: clipping per overlay e texture */
+.hero{
+  position:relative;
+  overflow:hidden;
+}
+
+/* Vignettatura interna + leggero pattern dots in alto (su .hero, sotto il testo) */
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(8,9,10,0) 55%, rgba(8,9,10,.5) 100%),
+    var(--tex-dots);
+  background-size:auto, 26px 26px;
+  opacity:.8;
+}
+.hero .wrap{
+  position:relative;
+  z-index:1;
+}
+
+/* 5a. KICKER con linee laterali — tratteggio accent che inquadra la data */
+.hero .kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:1rem;
+}
+.hero .kicker::before,
+.hero .kicker::after{
+  content:"";
+  width:44px;
+  height:1px;
+  flex:none;
+}
+.hero .kicker::before{
+  background:linear-gradient(90deg, transparent, var(--accent2));
+}
+.hero .kicker::after{
+  background:linear-gradient(90deg, var(--accent2), transparent);
+}
+
+/* 5b. TITOLO — tipografia più larga, ombra profonda, glow sui punti accent */
+.hero h1{
+  letter-spacing:-.035em;
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.55),
+    0 8px 40px rgba(0,0,0,.45),
+    0 0 70px rgba(113,112,255,.14);
+}
+
+/* 5c. <em> dentro l'h1: gradiente accent + bagliore (stile "highlight") */
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(120deg, var(--accent3) 0%, #b3baff 55%, var(--accent2) 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 0 20px rgba(113,112,255,.4));
+}
+
+/* 5d. Lead: larghezza contenuta per righe di lettura comode */
+.hero p{
+  max-width:56ch;
+}
+
+/* 5e. Meta: pillola vetro discreta per l'elenco fonti */
+.hero .meta{
+  display:inline-block;
+  padding:.55rem 1rem;
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+  font-size:.78rem;
+}
+/* ==========================================================================
+   6. FINITURE GLOBALI — scrollbar, selezione, accessibilità
+   ========================================================================== */
+
+/* Scrollbar scura coerente con il tema */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, var(--surface2), var(--panel));
+  border-radius:6px;
+  border:2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover{ background:var(--accent); }
+
+/* Selezione testo: accent trasparente */
+::selection{
+  background:rgba(113,112,255,.35);
+  color:var(--text);
+}
+
+/* Focus visibile accessibile (sostituisce l'outline default) */
+:focus-visible{
+  outline:2px solid var(--accent2);
+  outline-offset:2px;
+  border-radius:4px;
+}
+/* ==========================================================================
+   7. RESPONSIVE E PREFERENZE
+   ========================================================================== */
+
+/* Parallasse disattivato su touch/mobile (background-attachment:fixed è
+   instabile su iOS/Android) */
+@media (hover:none), (max-width:768px){
+  .bg-fixed{ background-attachment:scroll; }
+}
+
+/* Riduzione movimento per chi la richiede */
+@media (prefers-reduced-motion:reduce){
+  .card,
+  .lift,
+  .hero h1,
+  .hero h1 em{
+    transition:none !important;
+    animation:none !important;
+  }
+  .card:hover{ transform:none; }
+}
